@@ -1,0 +1,122 @@
+{
+    "1": {
+        "Type": "Start",
+        "Time": "0"
+    },
+    "2": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "3": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "4": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "5": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "6": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "7": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "8": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "9": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "10": {
+        "Type": "Break",
+        "Time": "20"
+    },
+    "11": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "12": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "13": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "14": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "15": {
+        "Type": "Lunch",
+        "Time": "60"
+    },
+    "16": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "17": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "18": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "19": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "20": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "21": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "22": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "23": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "24": {
+        "Type": "Break",
+        "Time": "20"
+    },
+    "25": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "26": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "27": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "28": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "29": {
+        "Type": "Break",
+        "Time": "20"
+    },
+    "30": {
+        "Type": "Finished",
+        "Time": "0"
+    }
+}
