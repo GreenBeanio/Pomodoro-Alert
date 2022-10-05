@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from datetime import datetime
+from operator import truediv
 import sys
+from tkinter import dialog
 import simpleaudio as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -10,6 +12,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QGridLayout,
     QRadioButton,
+    QMessageBox,
 )
 from PyQt6.QtGui import QIcon
 import os
@@ -20,14 +23,18 @@ curent_status = ""  # For Current Task
 state = False  # F=False, T=On
 hour_type = True  # T=8hr, F=7hr
 sound = True  # T=Make Sound, F=No Sound
+mute = False  # Used to force off sound
 time_until_next = 0
 elapsed_time = 0
+elapsed_work = 0
+elapsed_break = 0
 next_status = ""
 next_time = 0
 total_steps = 0
 current_step = 0
 current_time = 0
 next_time = 0
+prompt_result = ""
 # Directories
 directory_path = os.path.dirname(os.path.realpath(__file__))
 path_to_8hr = directory_path + "/Data/8hr.json"
@@ -63,6 +70,21 @@ def Play_Audio(current):
         finished_audio.play()
 
 
+### Toggling on the mute or unmute option ###
+def Toggle_Mute():
+    global mute
+    global sound
+    if mute == False:
+        mute = True
+        sound = (
+            False  # Setting this false just incase sound is currently playing it stops
+        )
+        Mute_Button.setText("Un-Mute")
+    else:
+        mute = False
+        Mute_Button.setText("Mute")
+
+
 ### Stopping the Sound To Indicate you are switching tasks ###
 def Stop_Sound():
     global sound
@@ -70,27 +92,52 @@ def Stop_Sound():
         sound = False
 
 
+### Check the confirmaton box ###
+def Confirmation_Box(button):
+    global prompt_result
+    prompt_result = button.text()
+
+
 ### Toggling Pomodoro ###
 def Toggle_Pomodoro():
     # Set Hour Type
     global hour_type
-    hour_type = _8hr_Radio.isChecked()
     # Set state and Buttons
     global state
     if state == False:
         state = True
+        hour_type = _8hr_Radio.isChecked()
         Pomodoro_Button.setText("Stop")
-        Gather_Data()
         _8hr_Radio.setCheckable(False)
         _7hr_Radio.setCheckable(False)
+        Gather_Data()
         timer.start(1000)
     else:
-        state = False
-        Pomodoro_Button.setText("Start")
-        Init_Time()
-        _8hr_Radio.setCheckable(True)
-        _7hr_Radio.setCheckable(True)
-        timer.stop()
+        # Dialouge box to confirm you want to stop
+        dialog = QMessageBox(
+            text="This will reset the time. Are you sure?", parent=window
+        )
+        dialog.setWindowTitle("Confirmation")
+        dialog.setIcon(QMessageBox.Icon.Question)
+        dialog.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        dialog.buttonClicked.connect(Confirmation_Box)
+        dialog.exec()
+        print(prompt_result)
+        if prompt_result == "&Yes":
+            state = False
+            Pomodoro_Button.setText("Start")
+            _8hr_Radio.setCheckable(True)
+            _7hr_Radio.setCheckable(True)
+            if hour_type == True:
+                _8hr_Radio.setChecked(True)
+                _7hr_Radio.setChecked(False)
+            else:
+                _8hr_Radio.setChecked(False)
+                _7hr_Radio.setChecked(True)
+            timer.stop()
+            Init_Time()
 
 
 ### Setting up Application ###
@@ -117,8 +164,13 @@ Next_Status_Text_Label = QLabel("Next Status:", parent=window)  # Static
 Next_Status_Label = QLabel("Next Status", parent=window)  # Dynamic
 Next_Time_Text_Label = QLabel("Next Time:", parent=window)  # Static
 Next_Time_Label = QLabel("Next Time", parent=window)  # Dynamic
-Pomodoro_Button = QPushButton("Start", parent=window)  # Static
+Pomodoro_Button = QPushButton("Start", parent=window)  # Dynamic
 Sound_Button = QPushButton("Sound", parent=window)  # Static
+Mute_Button = QPushButton("Mute", parent=window)  # Dynamic
+Elapsed_Work_Text_Label = QLabel("Elapsed Work:", parent=window)  # Static
+Elapsed_Work_Label = QLabel("Elapsed Work", parent=window)  # Dynamic
+Elapsed_Break_Text_Label = QLabel("Elapsed Break:", parent=window)  # Static
+Elapsed_Break_Label = QLabel("Elapsed Break", parent=window)  # Dynamic
 _7hr_Radio = QRadioButton("7 Hour Day", parent=window)  # Static
 _8hr_Radio = QRadioButton("8 Hour Day", parent=window)  # Static
 # Laying it all out
@@ -144,10 +196,15 @@ layout.addWidget(Next_Status_Text_Label, 5, 0, alignment=Qt.AlignmentFlag.AlignC
 layout.addWidget(Next_Status_Label, 5, 1, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Next_Time_Text_Label, 5, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Next_Time_Label, 5, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(_8hr_Radio, 6, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(_7hr_Radio, 6, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Pomodoro_Button, 7, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Sound_Button, 7, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Work_Text_Label, 6, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Work_Label, 6, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Break_Text_Label, 6, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Break_Label, 6, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(_8hr_Radio, 7, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(_7hr_Radio, 7, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Pomodoro_Button, 8, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Sound_Button, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Mute_Button, 8, 3, alignment=Qt.AlignmentFlag.AlignCenter)
 # Default Selection
 _8hr_Radio.setChecked(1)
 ### Button Events ###
@@ -155,6 +212,8 @@ _8hr_Radio.setChecked(1)
 Pomodoro_Button.clicked.connect(Toggle_Pomodoro)
 # Stopping the sound
 Sound_Button.clicked.connect(Stop_Sound)
+# Toggling Mute
+Mute_Button.clicked.connect(Toggle_Mute)
 
 ### Load JSON Data ###
 def Load_Time():
@@ -202,6 +261,8 @@ def Gather_Data():
     global sound
     global time_until_next
     global elapsed_time
+    global elapsed_work
+    global elapsed_break
     global next_status
     global time_data
     global total_steps
@@ -211,6 +272,8 @@ def Gather_Data():
     sound = False
     current_time = datetime.now().timestamp()
     elapsed_time = 0
+    elapsed_work = 0
+    elapsed_break = 0
     ######
     current_status = ""
     current_step = 0
@@ -248,9 +311,12 @@ def Init_Time():
     global sound
     global time_until_next
     global elapsed_time
+    global elapsed_work
+    global elapsed_break
     global next_status
     global time_data
     global total_steps
+    global prompt_result
     current_status = ""
     state = False
     hour_type = _8hr_Radio.isChecked()
@@ -260,9 +326,12 @@ def Init_Time():
     sound = False
     time_until_next = 0
     elapsed_time = 0
+    elapsed_work = 0
+    elapsed_break = 0
     next_status = ""
     time_data = {}
     total_steps = 0
+    prompt_result = ""
 
 
 ### Checking the Time ###
@@ -275,11 +344,18 @@ def Check_Time():
     global sound
     global time_until_next
     global elapsed_time
+    global elapsed_work
+    global elapsed_break
     global next_status
     # Setting time and elapsed time
     if current_step <= total_steps:
         current_time = datetime.now().timestamp()
         elapsed_time += 1
+        # Tracking specifc times
+        if current_status == "Work":
+            elapsed_work += 1
+        elif current_status == "Break":
+            elapsed_break += 1
     # Getting time data
     if current_time >= next_time and current_step < total_steps:
         current_step += 1
@@ -287,7 +363,8 @@ def Check_Time():
         next_time = time_data[current_step]["Time"]
         if current_step != total_steps:
             next_status = time_data[current_step + 1]["Type"]
-        sound = True
+        if mute == False:
+            sound = True
     # doing this to stop the labels
     elif current_time >= next_time and current_step == total_steps:
         current_step += 1
@@ -300,6 +377,12 @@ def Check_Time():
         # Convert times to good looking
         display_current_time = datetime.fromtimestamp(current_time).strftime("%H:%M:%S")
         display_elapsed_time = datetime.utcfromtimestamp(elapsed_time).strftime(
+            "%H:%M:%S"
+        )
+        display_elapsed_work = datetime.utcfromtimestamp(elapsed_work).strftime(
+            "%H:%M:%S"
+        )
+        display_elapsed_break = datetime.utcfromtimestamp(elapsed_break).strftime(
             "%H:%M:%S"
         )
         display_time_until_next = datetime.utcfromtimestamp(time_until_next).strftime(
@@ -315,6 +398,8 @@ def Check_Time():
         Current_Step_Label.setText(str(current_step))
         Total_Step_Label.setText(str(total_steps))
         Next_Status_Label.setText(next_status)
+        Elapsed_Work_Label.setText(str(display_elapsed_work))
+        Elapsed_Break_Label.setText(str(display_elapsed_break))
 
 
 ###### Main Timer Logic ######
