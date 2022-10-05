@@ -16,6 +16,11 @@ There were two different day types. Both have 1 hours lunch breaks. The differen
 - Running After
     - cd /your/folder
     - call env/Scripts/activate.bat && python3 Pomodoro_Alerts.py
+- Running Without Terminal Staying Around
+    - Change the file type from py to pyw
+    - You should just be able to click the file to launch it
+    - May need to also change python3 to just python if it doesn't work after the change
+        - In the first line of the code change python3 to python
 ### Linux
 - Initial Run
     - cd /your/folder
@@ -26,3 +31,7 @@ There were two different day types. Both have 1 hours lunch breaks. The differen
 - Running After
     - cd /your/folder
     - source env/bin/activate && python3 Pomodoro_Alerts.py
+- Running Without Terminal Staying Around
+    - Run the file with nohup
+    - May have to set executable if it's not already
+        - chmod +x Pomodoro_Alerts.py
