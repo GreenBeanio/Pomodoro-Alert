@@ -119,9 +119,9 @@ def Toggle_Pomodoro():
         state = True
         hour_type = _8hr_Radio.isChecked()
         Pomodoro_Button.setText("Stop")
+        Gather_Data()
         _8hr_Radio.setCheckable(False)
         _7hr_Radio.setCheckable(False)
-        Gather_Data()
         timer.start(1000)
     else:
         # Dialouge box to confirm you want to stop
@@ -135,7 +135,6 @@ def Toggle_Pomodoro():
         )
         dialog.buttonClicked.connect(Confirmation_Box)
         dialog.exec()
-        print(prompt_result)
         if prompt_result == "&Yes":
             state = False
             Pomodoro_Button.setText("Start")
