@@ -24,6 +24,7 @@ state = False  # F=False, T=On
 hour_type = True  # T=8hr, F=7hr
 sound = True  # T=Make Sound, F=No Sound
 mute = False  # Used to force off sound
+toggle_color = True  # Toggle if colors can change or not
 time_until_next = 0
 elapsed_time = 0
 elapsed_work = 0
@@ -83,6 +84,18 @@ def Toggle_Mute():
     else:
         mute = False
         Mute_Button.setText("Mute")
+
+
+### Toggling on or off if the color can switch ###
+def Toggle_Color():
+    global toggle_color
+    if toggle_color == True:
+        toggle_color = False
+        Color_Button.setText("No Color")
+    else:
+        toggle_color = True
+        Color_Button.setText("Color")
+    Change_Color()
 
 
 ### Stopping the Sound To Indicate you are switching tasks ###
@@ -167,6 +180,7 @@ Next_Time_Label = QLabel("Next Time", parent=window)  # Dynamic
 Pomodoro_Button = QPushButton("Start", parent=window)  # Dynamic
 Sound_Button = QPushButton("Sound", parent=window)  # Static
 Mute_Button = QPushButton("Mute", parent=window)  # Dynamic
+Color_Button = QPushButton("Color", parent=window)  # Dynamic
 Elapsed_Work_Text_Label = QLabel("Elapsed Work:", parent=window)  # Static
 Elapsed_Work_Label = QLabel("Elapsed Work", parent=window)  # Dynamic
 Elapsed_Break_Text_Label = QLabel("Elapsed Break:", parent=window)  # Static
@@ -203,8 +217,9 @@ layout.addWidget(Elapsed_Break_Label, 6, 3, alignment=Qt.AlignmentFlag.AlignCent
 layout.addWidget(_8hr_Radio, 7, 0, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(_7hr_Radio, 7, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Pomodoro_Button, 8, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Sound_Button, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Mute_Button, 8, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Sound_Button, 8, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Mute_Button, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Color_Button, 8, 3, alignment=Qt.AlignmentFlag.AlignCenter)
 # Default Selection
 _8hr_Radio.setChecked(1)
 ### Button Events ###
@@ -214,6 +229,29 @@ Pomodoro_Button.clicked.connect(Toggle_Pomodoro)
 Sound_Button.clicked.connect(Stop_Sound)
 # Toggling Mute
 Mute_Button.clicked.connect(Toggle_Mute)
+# Toggling Color
+Color_Button.clicked.connect(Toggle_Color)
+
+### Changing color of window ###
+def Change_Color():
+    current_color = ""
+    if toggle_color == True:
+        if current_status == "Start":
+            current_color = "lightpink"
+        elif current_status == "Work":
+            current_color = "mediumspringgreen"
+        elif current_status == "Break":
+            current_color = "mediumturquoise"
+        elif current_status == "Lunch":
+            current_color = "thistle"
+        elif current_status == "Finished":
+            current_color = "salmon"
+        else:
+            current_color = "lightgray"
+    else:
+        current_color = "lightgray"
+    window.setStyleSheet(f"background-color: {current_color}")
+
 
 ### Load JSON Data ###
 def Load_Time():
@@ -332,6 +370,7 @@ def Init_Time():
     time_data = {}
     total_steps = 0
     prompt_result = ""
+    Change_Color()
 
 
 ### Checking the Time ###
@@ -365,6 +404,8 @@ def Check_Time():
             next_status = time_data[current_step + 1]["Type"]
         if mute == False:
             sound = True
+        # Change the color
+        Change_Color()
     # doing this to stop the labels
     elif current_time >= next_time and current_step == total_steps:
         current_step += 1
