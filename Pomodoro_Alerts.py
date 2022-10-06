@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 from datetime import datetime
-from operator import truediv
 import sys
-from tkinter import dialog
 import simpleaudio as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
