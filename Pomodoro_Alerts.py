@@ -3,6 +3,7 @@
 from datetime import datetime
 from genericpath import exists
 import sys
+from time import time
 import simpleaudio as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -27,6 +28,7 @@ hour_type = "8"  # 8, 7, P, R
 sound = True  # T=Make Sound, F=No Sound
 mute = False  # Used to force off sound
 toggle_color = True  # Toggle if colors can change or not
+paused = False  # Toggle if paused or not
 time_until_next = 0
 elapsed_time = 0
 elapsed_work = 0
@@ -98,6 +100,21 @@ def Toggle_Mute():
         Mute_Button.setText("Mute")
 
 
+### Toggline Pause ###
+def Toggle_Pause():
+    if state == True:
+        global paused
+        if paused == False:
+            paused = True
+            Pause_Button.setText("Un-Pause")
+        else:
+            paused = False
+            Pause_Button.setText("Pause")
+            # Getting the math for the pause
+            Pause_Time()
+    Change_Color()
+
+
 ### Toggling on or off if the color can switch ###
 def Toggle_Color():
     global toggle_color
@@ -163,7 +180,7 @@ def Save_Data():
     )
     export_end_time = datetime.fromtimestamp(end_time).strftime("%Y/%m/%d, %H:%M:%S")
     # Convert to time format
-    export_real_elapsed_time = datetime.utcfromtimestamp(total_elapsed_time).strftime(
+    export_total_elapsed_time = datetime.utcfromtimestamp(total_elapsed_time).strftime(
         "%H:%M:%S"
     )
     export_elapsed_time = datetime.utcfromtimestamp(elapsed_time).strftime("%H:%M:%S")
@@ -187,7 +204,7 @@ def Save_Data():
     pre_data = {
         "Start Time": export_start_time,
         "End Time": export_end_time,
-        "Real Elapsed Time": export_real_elapsed_time,
+        "Total Elapsed Time": export_total_elapsed_time,
         "Elapsed Time": export_elapsed_time,
         "Pomodoro Type": export_type,
         "Work Time": export_work_time,
@@ -331,6 +348,7 @@ Pomodoro_Button = QPushButton("Start", parent=window)  # Dynamic
 Sound_Button = QPushButton("Sound", parent=window)  # Static
 Mute_Button = QPushButton("Mute", parent=window)  # Dynamic
 Color_Button = QPushButton("Color", parent=window)  # Dynamic
+Pause_Button = QPushButton("Pause", parent=window)  # Dynamic
 Elapsed_Work_Text_Label = QLabel("Elapsed Work:", parent=window)  # Static
 Elapsed_Work_Label = QLabel("Elapsed Work", parent=window)  # Dynamic
 Elapsed_Break_Text_Label = QLabel("Elapsed Break:", parent=window)  # Static
@@ -371,14 +389,17 @@ layout.addWidget(_7hr_Radio, 7, 1, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Pomodoro_Radio, 7, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Repeat_Radio, 7, 3, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Pomodoro_Button, 8, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Sound_Button, 8, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Mute_Button, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Color_Button, 8, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Pause_Button, 8, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Sound_Button, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Mute_Button, 8, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Color_Button, 8, 4, alignment=Qt.AlignmentFlag.AlignCenter)
 # Default Selection
 _8hr_Radio.setChecked(1)
 ### Button Events ###
 # Toggling Pomodoro
 Pomodoro_Button.clicked.connect(Toggle_Pomodoro)
+# Pause Button
+Pause_Button.clicked.connect(Toggle_Pause)
 # Stopping the sound
 Sound_Button.clicked.connect(Stop_Sound)
 # Toggling Mute
@@ -390,18 +411,21 @@ Color_Button.clicked.connect(Toggle_Color)
 def Change_Color():
     current_color = ""
     if toggle_color == True:
-        if current_status == "Start":
-            current_color = "lightpink"
-        elif current_status == "Work":
-            current_color = "mediumspringgreen"
-        elif current_status == "Break":
-            current_color = "mediumturquoise"
-        elif current_status == "Lunch":
-            current_color = "thistle"
-        elif current_status == "Finished":
-            current_color = "salmon"
+        if paused == False:
+            if current_status == "Start":
+                current_color = "lightpink"
+            elif current_status == "Work":
+                current_color = "mediumspringgreen"
+            elif current_status == "Break":
+                current_color = "mediumturquoise"
+            elif current_status == "Lunch":
+                current_color = "thistle"
+            elif current_status == "Finished":
+                current_color = "salmon"
+            else:
+                current_color = "lightgray"
         else:
-            current_color = "lightgray"
+            current_color = "mediumorchid"
     else:
         current_color = "lightgray"
     window.setStyleSheet(f"background-color: {current_color}")
@@ -423,6 +447,7 @@ def Load_Time():
     return loaded_time
 
 
+### Formatting Time ###
 def Format_Time():
     # Get time from JSON
     unformatted = Load_Time()
@@ -445,16 +470,46 @@ def Format_Time():
     return formatted
 
 
+### Remaking the Paused Data ###
+def Pause_Time():
+    # Global data
+    global time_data
+    global next_time
+    # Get time from JSON
+    unformatted = Load_Time()
+    total_time = 0
+    total_seconds = 0
+    temp_current_time = datetime.now().timestamp() - elapsed_time
+    formatted = {}
+    # For each do math
+    for x in unformatted:
+        # Loading Data
+        load_stage = int(x)
+        load_type = unformatted[x]["Type"]
+        load_time = int(unformatted[x]["Time"])
+        # Math to get time
+        to_seconds = load_time * 60
+        total_seconds += to_seconds
+        total_time = temp_current_time + total_seconds
+        # Write to dictionary
+        formatted[load_stage] = {"Type": load_type, "Time": total_time}
+    # Making the formatted new data to time data
+    time_data.clear()
+    time_data = formatted.copy()
+    # Getting fixed next_time
+    next_time = time_data[current_step]["Time"]
+
+
 ### Data Collection ###
 def Gather_Data():
     # Setting Variables
     global current_status
-    global state
     global hour_type
     global current_time
     global current_step
     global next_time
     global sound
+    global paused
     global time_until_next
     global elapsed_time
     global elapsed_work
@@ -466,7 +521,6 @@ def Gather_Data():
     global time_data
     global total_steps
     # Setting basic Variables
-    state = True  # Yes
     if _8hr_Radio.isChecked() == True:
         hour_type = "8"
     elif _7hr_Radio.isChecked() == True:
@@ -476,6 +530,7 @@ def Gather_Data():
     elif Repeat_Radio.isChecked() == True:
         hour_type = "R"
     sound = False
+    paused = False
     current_time = datetime.now().timestamp()
     elapsed_time = 0
     elapsed_work = 0
@@ -517,6 +572,7 @@ def Init_Time():
     global current_step
     global next_time
     global sound
+    global paused
     global time_until_next
     global elapsed_time
     global elapsed_work
@@ -535,6 +591,7 @@ def Init_Time():
     global end_time
     current_status = ""
     state = False
+    Pomodoro_Button.setText("Start")
     if _8hr_Radio.isChecked() == True:
         hour_type = "8"
     elif _7hr_Radio.isChecked() == True:
@@ -547,6 +604,8 @@ def Init_Time():
     current_step = 0
     next_time = 0
     sound = False
+    paused = False
+    Pause_Button.setText("Pause")
     time_until_next = 0
     elapsed_time = 0
     elapsed_work = 0
@@ -757,14 +816,16 @@ def Repeat_Time():
 
 ###### Main Timer Logic ######
 def Timing():
-    # Check time
-    if hour_type != "R":
-        Check_Time()
-    else:
-        Repeat_Time()
-    # Play sound
-    if sound == True:
-        Play_Audio(current_status)
+    # Pause Sate
+    if paused == False:
+        # Check time
+        if hour_type != "R":
+            Check_Time()
+        else:
+            Repeat_Time()
+        # Play sound
+        if sound == True:
+            Play_Audio(current_status)
 
 
 # region Initializing Everything
