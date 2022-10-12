@@ -1,0 +1,46 @@
+{
+    "1": {
+        "Type": "Start",
+        "Time": "0"
+    },
+    "2": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "3": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "4": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "5": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "6": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "7": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "8": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "9": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "10": {
+        "Type": "Break",
+        "Time": "20"
+    },
+    "11": {
+        "Type": "Finished",
+        "Time": "0"
+    }
+}

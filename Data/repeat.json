@@ -1,0 +1,38 @@
+{
+    "1": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "2": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "3": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "4": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "5": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "6": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "7": {
+        "Type": "Work",
+        "Time": "25"
+    },
+    "8": {
+        "Type": "Break",
+        "Time": "5"
+    },
+    "9": {
+        "Type": "Break",
+        "Time": "20"
+    }
+}
