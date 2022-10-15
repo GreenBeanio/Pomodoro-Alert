@@ -3,7 +3,6 @@
 from datetime import datetime
 from genericpath import exists
 import sys
-from time import time
 import simpleaudio as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -16,7 +15,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QComboBox,
 )
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QKeySequence, QShortcut
 import os
 import json
 
@@ -445,7 +444,20 @@ Sound_Button.clicked.connect(Stop_Sound)
 Mute_Button.clicked.connect(Toggle_Mute)
 # Toggling Color
 Color_Button.clicked.connect(Toggle_Color)
+# Keyboard Shortcuts
+sound__bind = QShortcut(QKeySequence("Space"), window)
+sound__bind.activated.connect(Stop_Sound)
+pause_bind = QShortcut(QKeySequence("Ctrl+Space"), window)
+pause_bind.activated.connect(Toggle_Pause)
+start_stop_bind = QShortcut(QKeySequence("Ctrl+Shift+S"), window)
+start_stop_bind.activated.connect(Toggle_Pomodoro)
+mute_toggle_bind = QShortcut(QKeySequence("Ctrl+M"), window)
+mute_toggle_bind.activated.connect(Toggle_Mute)
+color_toggle_bind = QShortcut(QKeySequence("Ctrl+C"), window)
+color_toggle_bind.activated.connect(Toggle_Color)
 # endregion
+
+
 ### Changing color of window ###
 def Change_Color():
     current_color = ""

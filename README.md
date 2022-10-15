@@ -1,10 +1,16 @@
 # Pomodoro-Alert
+
 ## What Does It Do?
 Follows a pomodoro ultradian rhythm. When clicking the start button it calculates the time and schedule. Every time the activity switches it will make a noise. You click the sound button to stop the sound. Clicking stop with restart the program, so be careful about that.
+
+---
 
 ## Reason For Creation
 This program was made for me to try and use the pomodoro time schedule.
 There were two different day types. Both have 1 hours lunch breaks. The difference is that one has 8 work hours and the other has 7 work hours.
+
+---
+
 ## Running The Python Script
 ### Windows
 - Initial Run
@@ -35,3 +41,20 @@ There were two different day types. Both have 1 hours lunch breaks. The differen
     - Run the file with nohup
     - May have to set executable if it's not already
         - chmod +x Pomodoro_Alerts.py
+
+---
+## Hotkeys
+- Stop Sound
+    - Space
+- Pause
+    - Ctrl + Space
+- Start/Stop
+    - Ctrl + Shift + S
+- Toggle Mute
+    - Ctrl + M
+- Toggle Colors
+    - Ctrl + C
+- Yes
+    - Enter
+- No
+    - Esc
