@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QRadioButton,
     QMessageBox,
+    QComboBox,
 )
 from PyQt6.QtGui import QIcon
 import os
@@ -29,6 +30,7 @@ sound = True  # T=Make Sound, F=No Sound
 mute = False  # Used to force off sound
 toggle_color = True  # Toggle if colors can change or not
 paused = False  # Toggle if paused or not
+replacement = "N"  # Used if replaceing work with school or vice versa
 time_until_next = 0
 elapsed_time = 0
 elapsed_work = 0
@@ -36,6 +38,7 @@ elapsed_break = 0
 elapsed_start = 0
 elapsed_lunch = 0
 elapsed_finished = 0
+elapsed_school = 0
 next_status = ""
 next_time = 0
 total_steps = 0
@@ -60,6 +63,7 @@ path_to_work = directory_path + "/Data/Work.wav"
 path_to_break = directory_path + "/Data/Break.wav"
 path_to_lunch = directory_path + "/Data/Lunch.wav"
 path_to_finished = directory_path + "/Data/Finished.wav"
+path_to_school = directory_path + "/Data/School.wav"
 path_to_save = directory_path + "/Export/"
 path_to_save_file = directory_path + "/Export/Save_Data.json"
 # Audio Clips
@@ -68,6 +72,7 @@ work_audio = sa.WaveObject.from_wave_file(path_to_work)
 break_audio = sa.WaveObject.from_wave_file(path_to_break)
 lunch_audio = sa.WaveObject.from_wave_file(path_to_lunch)
 finished_audio = sa.WaveObject.from_wave_file(path_to_finished)
+school_audio = sa.WaveObject.from_wave_file(path_to_school)
 # Data
 time_data = {}
 # endregion
@@ -83,6 +88,8 @@ def Play_Audio(current):
         lunch_audio.play()
     elif current == "Finished":
         finished_audio.play()
+    elif current == "School":
+        school_audio.play()
 
 
 ### Toggling on the mute or unmute option ###
@@ -185,6 +192,7 @@ def Save_Data():
     )
     export_elapsed_time = datetime.utcfromtimestamp(elapsed_time).strftime("%H:%M:%S")
     export_work_time = datetime.utcfromtimestamp(elapsed_work).strftime("%H:%M:%S")
+    export_school_time = datetime.utcfromtimestamp(elapsed_school).strftime("%H:%M:%S")
     export_break_time = datetime.utcfromtimestamp(elapsed_break).strftime("%H:%M:%S")
     export_lunch_time = datetime.utcfromtimestamp(elapsed_lunch).strftime("%H:%M:%S")
     export_starting_time = datetime.utcfromtimestamp(elapsed_start).strftime("%H:%M:%S")
@@ -208,6 +216,7 @@ def Save_Data():
         "Elapsed Time": export_elapsed_time,
         "Pomodoro Type": export_type,
         "Work Time": export_work_time,
+        "School Time": export_school_time,
         "Break Time": export_break_time,
         "Lunch Time": export_lunch_time,
         "Starting Time": export_starting_time,
@@ -247,8 +256,10 @@ def Toggle_Pomodoro():
     global hour_type
     # Set state and Buttons
     global state
+    # Set replacecment type
+    global replacement
     if state == False:
-        # Setting everything
+        # Setting Type
         if _8hr_Radio.isChecked() == True:
             hour_type = "8"
             _8hr_Radio.setCheckable(True)
@@ -273,6 +284,15 @@ def Toggle_Pomodoro():
             _7hr_Radio.setCheckable(False)
             Pomodoro_Radio.setCheckable(False)
             Repeat_Radio.setCheckable(True)
+        # Getting replacement status
+        if replacement_combo.currentText() == "Don't Repalce":
+            replacement = "N"
+        elif replacement_combo.currentText() == "Work to School":
+            replacement = "WtS"
+        elif replacement_combo.currentText() == "School to Work":
+            replacement = "StW"
+        replacement_combo.setEnabled(False)
+        # Changing button text
         Pomodoro_Button.setText("Stop")
         # Getting information
         Gather_Data()
@@ -313,6 +333,7 @@ def Toggle_Pomodoro():
                 _7hr_Radio.setChecked(False)
                 Pomodoro_Radio.setChecked(False)
                 Repeat_Radio.setChecked(True)
+            replacement_combo.setEnabled(True)
             # Checking if the user wants to export the results
             Save_Box()
             if prompt_result == "&Yes":
@@ -351,12 +372,23 @@ Color_Button = QPushButton("Color", parent=window)  # Dynamic
 Pause_Button = QPushButton("Pause", parent=window)  # Dynamic
 Elapsed_Work_Text_Label = QLabel("Elapsed Work:", parent=window)  # Static
 Elapsed_Work_Label = QLabel("Elapsed Work", parent=window)  # Dynamic
+# New
+Elapsed_School_Text_Label = QLabel("Elapsed School:", parent=window)  # Static
+Elapsed_School_Label = QLabel("Elapsed School", parent=window)  # Dynamic
+# Old
 Elapsed_Break_Text_Label = QLabel("Elapsed Break:", parent=window)  # Static
 Elapsed_Break_Label = QLabel("Elapsed Break", parent=window)  # Dynamic
+# New
+Elapsed_Lunch_Text_Label = QLabel("Elapsed Lunch:", parent=window)  # Static
+Elapsed_Lunch_Label = QLabel("Elapsed Lunch", parent=window)  # Dynamic
+# Old
 _7hr_Radio = QRadioButton("7 Hour Day", parent=window)  # Static
 _8hr_Radio = QRadioButton("8 Hour Day", parent=window)  # Static
 Pomodoro_Radio = QRadioButton("Pomodoro", parent=window)  # Static
 Repeat_Radio = QRadioButton("Repeat", parent=window)  # Static
+replacement_combo = QComboBox(parent=window)  # Static
+replacement_combo.addItems(["Don't Repalce", "Work to School", "School to Work"])
+replacement_combo.setCurrentIndex(0)
 # Laying it all out
 layout = QGridLayout()
 layout.addWidget(Pomodoro_Label, 0, 0, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -364,35 +396,42 @@ layout.addWidget(
     Current_Status_Text_Label, 1, 0, alignment=Qt.AlignmentFlag.AlignCenter
 )
 layout.addWidget(Current_Status_Label, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Current_Time_Text_Label, 2, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Current_Time_Label, 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Elapsed_Time_Text_Label, 3, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Elapsed_Time_Label, 3, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Current_Time_Text_Label, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Current_Time_Label, 1, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Time_Text_Label, 2, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Time_Label, 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(
-    Time_Until_Next_Text_Label, 3, 2, alignment=Qt.AlignmentFlag.AlignCenter
+    Time_Until_Next_Text_Label, 2, 2, alignment=Qt.AlignmentFlag.AlignCenter
 )
-layout.addWidget(Time_Until_Next_Label, 3, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Current_Step_Text_Label, 4, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Current_Step_Label, 4, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Total_Step_Text_Label, 4, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Total_Step_Label, 4, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Next_Status_Text_Label, 5, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Next_Status_Label, 5, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Next_Time_Text_Label, 5, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Next_Time_Label, 5, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Elapsed_Work_Text_Label, 6, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Elapsed_Work_Label, 6, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Elapsed_Break_Text_Label, 6, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Elapsed_Break_Label, 6, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Time_Until_Next_Label, 2, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Current_Step_Text_Label, 3, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Current_Step_Label, 3, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Total_Step_Text_Label, 3, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Total_Step_Label, 3, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Next_Status_Text_Label, 4, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Next_Status_Label, 4, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Next_Time_Text_Label, 4, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Next_Time_Label, 4, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Work_Text_Label, 5, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Work_Label, 5, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(
+    Elapsed_School_Text_Label, 5, 2, alignment=Qt.AlignmentFlag.AlignCenter
+)
+layout.addWidget(Elapsed_School_Label, 5, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Break_Text_Label, 6, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Break_Label, 6, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Lunch_Text_Label, 6, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Elapsed_Lunch_Label, 6, 3, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(_8hr_Radio, 7, 0, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(_7hr_Radio, 7, 1, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Pomodoro_Radio, 7, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 layout.addWidget(Repeat_Radio, 7, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Pomodoro_Button, 8, 0, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Pause_Button, 8, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Sound_Button, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Mute_Button, 8, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(Color_Button, 8, 4, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Mute_Button, 8, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Color_Button, 8, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(replacement_combo, 8, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Pomodoro_Button, 9, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Sound_Button, 9, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+layout.addWidget(Pause_Button, 9, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 # Default Selection
 _8hr_Radio.setChecked(1)
 ### Button Events ###
@@ -422,6 +461,8 @@ def Change_Color():
                 current_color = "thistle"
             elif current_status == "Finished":
                 current_color = "salmon"
+            elif current_status == "School":
+                current_color = "mediumaquamarine"
             else:
                 current_color = "lightgray"
         else:
@@ -500,6 +541,34 @@ def Pause_Time():
     next_time = time_data[current_step]["Time"]
 
 
+### Restarting the loop ###
+def Repeat_Calc():
+    # Global data
+    global time_data
+    global next_time
+    # Get time from JSON
+    unformatted = Load_Time()
+    total_time = 0
+    total_seconds = 0
+    temp_current_time = datetime.now().timestamp()
+    formatted = {}
+    # For each do math
+    for x in unformatted:
+        # Loading Data
+        load_stage = int(x)
+        load_type = unformatted[x]["Type"]
+        load_time = int(unformatted[x]["Time"])
+        # Math to get time
+        to_seconds = load_time * 60
+        total_seconds += to_seconds
+        total_time = temp_current_time + total_seconds
+        # Write to dictionary
+        formatted[load_stage] = {"Type": load_type, "Time": total_time}
+    # Making the formatted new data to time data
+    time_data.clear()
+    time_data = formatted.copy()
+
+
 ### Data Collection ###
 def Gather_Data():
     # Setting Variables
@@ -510,6 +579,7 @@ def Gather_Data():
     global next_time
     global sound
     global paused
+    global replacement
     global time_until_next
     global elapsed_time
     global elapsed_work
@@ -529,6 +599,12 @@ def Gather_Data():
         hour_type = "P"
     elif Repeat_Radio.isChecked() == True:
         hour_type = "R"
+    if replacement_combo.currentText() == "Don't Repalce":
+        replacement = "N"
+    elif replacement_combo.currentText() == "Work to School":
+        replacement = "WtS"
+    elif replacement_combo.currentText() == "School to Work":
+        replacement = "StW"
     sound = False
     paused = False
     current_time = datetime.now().timestamp()
@@ -563,7 +639,9 @@ def Init_Time():
     Next_Status_Label.setText("Not Started")
     Next_Time_Label.setText("Not Started")
     Elapsed_Work_Label.setText("Not Started")
+    Elapsed_School_Label.setText("Not Started")
     Elapsed_Break_Label.setText("Not Started")
+    Elapsed_Lunch_Label.setText("Not Started")
     # Setting Variables
     global current_status
     global state
@@ -573,6 +651,7 @@ def Init_Time():
     global next_time
     global sound
     global paused
+    global replacement
     global time_until_next
     global elapsed_time
     global elapsed_work
@@ -580,6 +659,7 @@ def Init_Time():
     global elapsed_start
     global elapsed_lunch
     global elapsed_finished
+    global elapsed_school
     global next_status
     global time_data
     global total_steps
@@ -600,6 +680,12 @@ def Init_Time():
         hour_type = "P"
     elif Repeat_Radio.isChecked() == True:
         hour_type = "R"
+    if replacement_combo.currentText() == "Don't Repalce":
+        replacement = "N"
+    elif replacement_combo.currentText() == "Work to School":
+        replacement = "WtS"
+    elif replacement_combo.currentText() == "School to Work":
+        replacement = "StW"
     current_time = 0
     current_step = 0
     next_time = 0
@@ -613,6 +699,7 @@ def Init_Time():
     elapsed_start = 0
     elapsed_lunch = 0
     elapsed_finished = 0
+    elapsed_school = 0
     next_status = ""
     time_data = {}
     total_steps = 0
@@ -640,6 +727,7 @@ def Check_Time():
     global elapsed_start
     global elapsed_lunch
     global elapsed_finished
+    global elapsed_school
     global next_status
     global start_time
     global total_elapsed_time
@@ -661,12 +749,20 @@ def Check_Time():
                 elapsed_start += 1
             elif current_status == "Finished":
                 elapsed_finished += 1
+            elif current_status == "School":
+                elapsed_school += 1
         else:
             start_time = current_time
     # Getting time data
     if current_time >= next_time and current_step < total_steps:
         current_step += 1
         current_status = time_data[current_step]["Type"]
+        # Replacing status if listed
+        if replacement == "WtS" and current_status == "Work":
+            current_status = "School"
+        elif replacement == "StW" and current_status == "School":
+            current_status = "Work"
+        # Getting times
         next_time = time_data[current_step]["Time"]
         if current_step != total_steps:
             next_status = time_data[current_step + 1]["Type"]
@@ -692,7 +788,13 @@ def Check_Time():
         display_elapsed_work = datetime.utcfromtimestamp(elapsed_work).strftime(
             "%H:%M:%S"
         )
+        display_elapsed_school = datetime.utcfromtimestamp(elapsed_school).strftime(
+            "%H:%M:%S"
+        )
         display_elapsed_break = datetime.utcfromtimestamp(elapsed_break).strftime(
+            "%H:%M:%S"
+        )
+        display_elapsed_lunch = datetime.utcfromtimestamp(elapsed_lunch).strftime(
             "%H:%M:%S"
         )
         display_time_until_next = datetime.utcfromtimestamp(time_until_next).strftime(
@@ -709,9 +811,11 @@ def Check_Time():
         Total_Step_Label.setText(str(total_steps))
         Next_Status_Label.setText(next_status)
         Elapsed_Work_Label.setText(str(display_elapsed_work))
+        Elapsed_School_Label.setText(str(display_elapsed_school))
         Elapsed_Break_Label.setText(str(display_elapsed_break))
+        Elapsed_Lunch_Label.setText(str(display_elapsed_lunch))
         # True elapsed time & endtime
-        total_elapsed_time = round(current_time - start_time)
+        total_elapsed_time = current_time - start_time
         end_time = current_time
 
 
@@ -730,9 +834,12 @@ def Repeat_Time():
     global elapsed_start
     global elapsed_lunch
     global elapsed_finished
+    global elapsed_school
     global next_status
+    ####
     global current_step_repeat
     global total_steps_repeat
+    ####
     global start_time
     global total_elapsed_time
     global end_time
@@ -754,6 +861,8 @@ def Repeat_Time():
                 elapsed_start += 1
             elif current_status == "Finished":
                 elapsed_finished += 1
+            elif current_status == "School":
+                elapsed_school += 1
         else:
             start_time = current_time
     # Getting time data
@@ -761,6 +870,12 @@ def Repeat_Time():
         current_step += 1
         current_step_repeat += 1
         current_status = time_data[current_step]["Type"]
+        # Replacing status if listed
+        if replacement == "WtS" and current_status == "Work":
+            current_status = "School"
+        elif replacement == "StW" and current_status == "School":
+            current_status = "Work"
+        # Getting times
         next_time = time_data[current_step]["Time"]
         if current_step != total_steps:
             next_status = time_data[current_step + 1]["Type"]
@@ -769,12 +884,20 @@ def Repeat_Time():
             sound = True
         # Change the color
         Change_Color()
-    # doing this to stop the labels
+    # doing this to restart the loop
     elif current_time >= next_time and current_step == total_steps:
         current_step = 1
         current_step_repeat += 1
         total_steps_repeat += total_steps
+        # Getting new calculations
+        Repeat_Calc()
         current_status = time_data[current_step]["Type"]
+        # Replacing status if listed
+        if replacement == "WtS" and current_status == "Work":
+            current_status = "School"
+        elif replacement == "StW" and current_status == "School":
+            current_status = "Work"
+        # Getting times
         next_time = time_data[current_step]["Time"]
         if current_step != total_steps:
             next_status = time_data[current_step + 1]["Type"]
@@ -791,7 +914,13 @@ def Repeat_Time():
     display_current_time = datetime.fromtimestamp(current_time).strftime("%H:%M:%S")
     display_elapsed_time = datetime.utcfromtimestamp(elapsed_time).strftime("%H:%M:%S")
     display_elapsed_work = datetime.utcfromtimestamp(elapsed_work).strftime("%H:%M:%S")
+    display_elapsed_school = datetime.utcfromtimestamp(elapsed_school).strftime(
+        "%H:%M:%S"
+    )
     display_elapsed_break = datetime.utcfromtimestamp(elapsed_break).strftime(
+        "%H:%M:%S"
+    )
+    display_elapsed_lunch = datetime.utcfromtimestamp(elapsed_lunch).strftime(
         "%H:%M:%S"
     )
     display_time_until_next = datetime.utcfromtimestamp(time_until_next).strftime(
@@ -808,9 +937,11 @@ def Repeat_Time():
     Total_Step_Label.setText(str(total_steps_repeat))
     Next_Status_Label.setText(next_status)
     Elapsed_Work_Label.setText(str(display_elapsed_work))
+    Elapsed_School_Label.setText(str(display_elapsed_school))
     Elapsed_Break_Label.setText(str(display_elapsed_break))
+    Elapsed_Lunch_Label.setText(str(display_elapsed_lunch))
     # True elapsed time & endtime
-    total_elapsed_time = round(current_time - start_time)
+    total_elapsed_time = current_time - start_time
     end_time = current_time
 
 
