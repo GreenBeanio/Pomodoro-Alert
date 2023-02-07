@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # region Imports
 from datetime import datetime
-from genericpath import exists
 import sys
 import simpleaudio as sa
 from PyQt6.QtCore import Qt, QTimer
@@ -222,10 +221,10 @@ def Save_Data():
         "Finished Time": export_finished_time,
     }
     # Check if the directory exists
-    if not exists(path_to_save):
+    if os.path.exists(path_to_save) == False:
         os.mkdir(path_to_save)
     # Checking if the file exists
-    if not exists(path_to_save_file):
+    if os.path.exists(path_to_save_file) == False:
         new_file = open(path_to_save_file, "x")
         new_file.close()
     # Opening file
